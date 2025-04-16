@@ -48,7 +48,7 @@ public class Task {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
-    private App_user owner;
+    private AppUser owner;
 
     @JsonProperty("owner_id")
     public Long getOwnerId() {
@@ -62,7 +62,7 @@ public class Task {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "performer_id")
-    private App_user performer;
+    private AppUser performer;
 
     @OneToMany(mappedBy = "task",cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();

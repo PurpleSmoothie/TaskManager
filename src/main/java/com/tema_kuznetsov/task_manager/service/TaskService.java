@@ -1,31 +1,30 @@
 package com.tema_kuznetsov.task_manager.service;
 
-import com.tema_kuznetsov.task_manager.dto.commentDto.CommentResponseDto;
-import com.tema_kuznetsov.task_manager.dto.taskDto.TaskCreateDto;
-import com.tema_kuznetsov.task_manager.dto.taskDto.TaskResponseDto;
-import com.tema_kuznetsov.task_manager.dto.taskDto.TaskUpdateDto;
+import com.tema_kuznetsov.task_manager.dto.comment.CommentResponseDto;
+import com.tema_kuznetsov.task_manager.dto.task.TaskCreateDto;
+import com.tema_kuznetsov.task_manager.dto.task.TaskResponseDto;
+import com.tema_kuznetsov.task_manager.dto.task.TaskUpdateDto;
 import com.tema_kuznetsov.task_manager.exception.taskException.priorityException.IncorrectPriorityTitleException;
 import com.tema_kuznetsov.task_manager.exception.taskException.statusException.IncorrectStatusTitleException;
 import com.tema_kuznetsov.task_manager.exception.taskException.TaskIdNotFoundException;
 import com.tema_kuznetsov.task_manager.exception.taskException.titleException.TaskTitleNotFoundException;
+import com.tema_kuznetsov.task_manager.exception.userException.emailException.UserEmailNotFoundException;
 import com.tema_kuznetsov.task_manager.exception.userException.ownerException.OwnerIdNotFoundException;
 import com.tema_kuznetsov.task_manager.exception.userException.performerException.PerformerIdNotFoundException;
-import com.tema_kuznetsov.task_manager.model.App_user;
+import com.tema_kuznetsov.task_manager.model.AppUser;
 import com.tema_kuznetsov.task_manager.model.Task;
 import com.tema_kuznetsov.task_manager.model.enums.TaskPriority;
 import com.tema_kuznetsov.task_manager.model.enums.TaskStatus;
-import com.tema_kuznetsov.task_manager.repository.CommentRepository;
 import com.tema_kuznetsov.task_manager.repository.TaskRepository;
 import com.tema_kuznetsov.task_manager.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-
+import org.springframework.security.core.Authentication;
 
 @RequiredArgsConstructor // конструктор только для файнал полей
 @Service
@@ -34,12 +33,15 @@ public class TaskService {
     private final UserRepository userRepository;
     private final CommentService commentService;
 
+
     //1. Создание задачи
     @Transactional
     public Task createTask(@Valid TaskCreateDto dto) {
-        // Проверка пользователей остается в сервисе
-        App_user owner = userRepository.findById(dto.getOwner_id())
-                .orElseThrow(() -> new OwnerIdNotFoundException(dto.getOwner_id()));
+        // Извлекаем текущего пользователя из Authentication
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        AppUser owner = userRepository.findUserByEmail(username)
+                .orElseThrow(() -> new UserEmailNotFoundException(username));  // Получаем пользователя по email
 
         Task task = new Task();
         task.setTitle(dto.getTitle());
@@ -169,7 +171,7 @@ public class TaskService {
     @Transactional
     public TaskResponseDto updateTaskPerformer(Long id, Long performerId) {
         Task task = getTaskByIdOrThrow(id);
-        App_user performer = userRepository.findById(performerId)
+        AppUser performer = userRepository.findById(performerId)
                 .orElseThrow(() -> new PerformerIdNotFoundException(performerId));
 
         task.setPerformer(performer);
@@ -210,6 +212,20 @@ public class TaskService {
     private Task getTaskByIdOrThrow(Long id) {
         return taskRepository.findById(id)
                 .orElseThrow(() -> new TaskIdNotFoundException(id));
+    }
+
+    // метод для подтверждения мол пользователь и владелец задачи это один и тот же юзер
+    public boolean isOwner(Long taskId, String userEmail) {
+        Task task = getTaskByIdOrThrow(taskId);
+
+        return task.getOwner().getEmail().equals(userEmail); // или getUsername(), зависит от модели
+    }
+
+    // метод для подтверждения мол пользователь и раб задачи это один и тот же юзер
+    public boolean isPerformer(Long taskId, String userEmail) {
+        Task task = getTaskByIdOrThrow(taskId);
+
+        return task.getPerformer().getEmail().equals(userEmail); // или getUsername(), зависит от модели
     }
 
 

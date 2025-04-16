@@ -1,13 +1,14 @@
 package com.tema_kuznetsov.task_manager.controller;
 
-import com.tema_kuznetsov.task_manager.dto.commentDto.CommentResponseDto;
-import com.tema_kuznetsov.task_manager.dto.userDto.UserCreateDto;
-import com.tema_kuznetsov.task_manager.dto.userDto.UserResponseDto;
-import com.tema_kuznetsov.task_manager.dto.userDto.UserUpdateDto;
-import com.tema_kuznetsov.task_manager.model.App_user;
+import com.tema_kuznetsov.task_manager.dto.comment.CommentResponseDto;
+import com.tema_kuznetsov.task_manager.dto.user.UserResponseDto;
+import com.tema_kuznetsov.task_manager.dto.user.UserUpdateDto;
 import com.tema_kuznetsov.task_manager.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,60 +17,70 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import java.net.URI;
 
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Tag(name = "Users", description = "Управление пользователями")
 public class UserController {
     private final UserService userService;
 
-    // 1. Создать пользователя c указанием роли
-    @PostMapping("/create")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserCreateDto dto) {
-        App_user createdUser = userService.createUser(dto);
-
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(createdUser.getId())
-                .toUri();
-        return ResponseEntity.ok(new UserResponseDto(createdUser));
-    }
-
-    // 2. Получить пользователя по ID
+    @Operation(summary = "Получить пользователя по ID", description = "Доступно администраторам и модераторам")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Пользователь найден"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
+    })
     @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public ResponseEntity<UserResponseDto> findUserById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.findUserById(id));
     }
 
-    // 3. Поиск по точному названию
+    @Operation(summary = "Поиск пользователя по логину (точное совпадение)", description = "Доступно только администраторам и модераторам")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Пользователь найден"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
+    })
     @GetMapping("/search/exact")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public ResponseEntity<UserResponseDto> findUserByExactLogin(@RequestParam String login) {
         return ResponseEntity.ok(userService.findUserByExactLogin(login));
     }
 
-    // 4. Поиск по имейлу
+    @Operation(summary = "Поиск пользователя по email", description = "Доступно администраторам и модераторам")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Пользователь найден"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
+    })
     @GetMapping("/search/email")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
-    public ResponseEntity<UserResponseDto> findUserByEmail(
-            @RequestParam String email) {
+    public ResponseEntity<UserResponseDto> findUserByEmail(@RequestParam String email) {
         return ResponseEntity.ok(userService.findUserByEmail(email));
     }
 
-    // 5. Поиск по кусочку названия
+    @Operation(summary = "Поиск пользователя по части логина", description = "Доступно администраторам и модераторам. Поддерживает пагинацию.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Пользователи найдены"),
+            @ApiResponse(responseCode = "404", description = "Пользователи не найдены"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
+    })
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public ResponseEntity<Page<UserResponseDto>> findUserByLoginContaining(
             @RequestParam String loginPart,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(userService.findUserByLoginContaining(loginPart,pageable));
+        return ResponseEntity.ok(userService.findUserByLoginContaining(loginPart, pageable));
     }
 
-    // 6. Получить всех пользователей
+    @Operation(summary = "Получить всех пользователей", description = "Доступно администраторам и модераторам. Поддерживает пагинацию.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Пользователи получены"),
+            @ApiResponse(responseCode = "404", description = "Пользователи не найдены"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
+    })
     @GetMapping("/list")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public ResponseEntity<Page<UserResponseDto>> findAllTasks(
@@ -77,7 +88,12 @@ public class UserController {
         return ResponseEntity.ok(userService.findAllUsers(pageable));
     }
 
-    // 7. Обновление пользователя по айди
+    @Operation(summary = "Обновить пользователя по ID", description = "Доступно админам или самому пользователю. Обновляются данные профиля.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Пользователь обновлен"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
+    })
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
     public ResponseEntity<UserResponseDto> updateUser(
@@ -88,7 +104,12 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
-    // 8. Обновление пароля пользователя по айди
+    @Operation(summary = "Обновить пароль пользователя по ID", description = "Доступно админам или самому пользователю.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Пароль обновлен"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
+    })
     @PatchMapping("/{id}/password")
     @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
     public ResponseEntity<UserResponseDto> updateUserPasswordById(
@@ -97,7 +118,12 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUserPasswordById(id, password));
     }
 
-    // 9. Обновление роли пользователя по айди
+    @Operation(summary = "Обновить роль пользователя по ID", description = "Доступно только администраторам.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Роль обновлена"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
+    })
     @PatchMapping("/{id}/role")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponseDto> updateUserRoleById(
@@ -106,16 +132,25 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUserRoleById(id, role));
     }
 
-    // 10. Удаление пользователя по имени
+    @Operation(summary = "Удалить пользователя по логину", description = "Доступно только администраторам.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Пользователь удален"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
+    })
     @DeleteMapping("/by-login/{login}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteUserByLogin(
-            @PathVariable String login) {
+    public ResponseEntity<Void> deleteUserByLogin(@PathVariable String login) {
         userService.deleteUserByLogin(login);
         return ResponseEntity.noContent().build();
     }
 
-    // 11. Удаление пользователя по айди
+    @Operation(summary = "Удалить пользователя по ID", description = "Доступно только администраторам.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Пользователь удален"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
+    })
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteUserById(@PathVariable Long id) {
@@ -123,16 +158,24 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    // 12. Поиск пользователей по роли
+    @Operation(summary = "Поиск пользователей по роли", description = "Доступно администраторам и модераторам. Поддерживает пагинацию.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Пользователи найдены"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен или пользователь не найден")
+    })
     @GetMapping("/search/role")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public ResponseEntity<Page<UserResponseDto>> findUsersByRole(
             @RequestParam String role,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(userService.findUsersByRole(role,pageable));
+        return ResponseEntity.ok(userService.findUsersByRole(role, pageable));
     }
 
-    // 13. Вывод всех комментов пользователя по айди
+    @Operation(summary = "Получить комментарии пользователя по ID", description = "Доступно админам, модераторам или самому пользователю. Поддерживает пагинацию")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Комментарии получены"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен или комментарии для данного пользователя не найдены")
+    })
     @GetMapping("{id}/comments")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR') or #id == authentication.principal.id")
     public ResponseEntity<Page<CommentResponseDto>> findCommentsByUserId(

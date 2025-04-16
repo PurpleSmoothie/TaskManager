@@ -145,4 +145,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse(HttpStatus.BAD_REQUEST, "Invalid email", ex.getMessage()));
     }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleIncorrectEmailFormat(BadCredentialsException ex) {
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse(HttpStatus.BAD_REQUEST, "Invalid email or login", ex.getMessage()));
+    }
 }

@@ -1,25 +1,24 @@
 package com.tema_kuznetsov.task_manager.service;
 
-import com.tema_kuznetsov.task_manager.dto.commentDto.CommentResponseDto;
-import com.tema_kuznetsov.task_manager.dto.userDto.UserCreateDto;
-import com.tema_kuznetsov.task_manager.dto.userDto.UserResponseDto;
-import com.tema_kuznetsov.task_manager.dto.userDto.UserUpdateDto;
+import com.tema_kuznetsov.task_manager.dto.comment.CommentResponseDto;
+import com.tema_kuznetsov.task_manager.dto.user.UserResponseDto;
+import com.tema_kuznetsov.task_manager.dto.user.UserUpdateDto;
 import com.tema_kuznetsov.task_manager.exception.userException.InvalidPasswordException;
 import com.tema_kuznetsov.task_manager.exception.userException.UserIdNotFoundException;
 import com.tema_kuznetsov.task_manager.exception.userException.emailException.IncorrectEmailFormatException;
 import com.tema_kuznetsov.task_manager.exception.userException.emailException.UserEmailNotFoundException;
 import com.tema_kuznetsov.task_manager.exception.userException.loginException.UserLoginNotFoundException;
 import com.tema_kuznetsov.task_manager.exception.userException.roleException.IncorrectRoleTitleException;
-import com.tema_kuznetsov.task_manager.model.App_user;
+import com.tema_kuznetsov.task_manager.model.AppUser;
 import com.tema_kuznetsov.task_manager.model.enums.UserRole;
 import com.tema_kuznetsov.task_manager.repository.UserRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 @RequiredArgsConstructor // конструктор только для файнал полей
 @Service
@@ -28,30 +27,17 @@ public class UserService {
     private final CommentService commentService;
     private final PasswordEncoder passwordEncoder;
 
-    //1. Создание нового пользователя
-    @Transactional
-    public App_user createUser(@Valid UserCreateDto dto) {
 
-        App_user appUser = new App_user();
-        appUser.setLogin(dto.getLogin());
-        appUser.setRole(UserRole.USER.toString());
-        appUser.setEmail(dto.getEmail());
-
-        // Кодирование пароля перед сохранением
-        appUser.setPassword(passwordEncoder.encode(dto.getPassword()));
-
-        return userRepository.save(appUser);
-    }
 
     //2. Получение пользователя по ID
     public UserResponseDto findUserById(Long id) {
-        App_user app_user = getUserByIdOrThrow(id);
+        AppUser app_user = getUserByIdOrThrow(id);
         return new UserResponseDto(app_user); // Конвертируем Task в TaskResponseDto
     }
 
     //3. Получение пользователя по его точному имени
     public UserResponseDto findUserByExactLogin(String login) {
-        App_user app_user = userRepository.findUserByLogin(login)
+        AppUser app_user = userRepository.findUserByLogin(login)
                 .orElseThrow(() -> new UserLoginNotFoundException(login));
         return new UserResponseDto(app_user); // Конвертируем Task в TaskResponseDto
     }
@@ -61,14 +47,14 @@ public class UserService {
         if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
             throw new IncorrectEmailFormatException();
         }
-        App_user app_user = userRepository.findUserByEmail(email)
+        AppUser app_user = userRepository.findUserByEmail(email)
                 .orElseThrow(() -> new UserEmailNotFoundException(email));
         return new UserResponseDto(app_user);
     }
 
     //5. Получение пользователя по части имени
     public Page<UserResponseDto> findUserByLoginContaining(String loginPart, Pageable pageable) {
-        Page<App_user> app_users = userRepository.findUserByLoginContaining(loginPart, pageable);
+        Page<AppUser> app_users = userRepository.findUserByLoginContaining(loginPart, pageable);
         if (app_users.isEmpty()) {
             throw new UserLoginNotFoundException(loginPart);
         }
@@ -83,7 +69,7 @@ public class UserService {
     //7. Обновление логина,почты и пароля пользователя по айди
     @Transactional
     public UserResponseDto updateUserById(Long id, UserUpdateDto dto) {
-        App_user app_user = getUserByIdOrThrow(id);
+        AppUser app_user = getUserByIdOrThrow(id);
 
         // Обновление полей с проверкой на null
         if (dto.getLogin() != null && !dto.getLogin().isBlank()) {
@@ -94,16 +80,19 @@ public class UserService {
             app_user.setEmail(dto.getEmail());
         }
 
+        // Кодирование пароля, если он был передан
         if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
-            app_user.setPassword(dto.getPassword());
+            String encodedPassword = passwordEncoder.encode(dto.getPassword()); // Используем PasswordEncoder
+            app_user.setPassword(encodedPassword);
         }
+
         return new UserResponseDto(app_user);
     }
 
     //8. Обновление пароля пользователя по айди
     @Transactional
     public UserResponseDto updateUserPasswordById(Long id, String password) {
-        App_user app_user = getUserByIdOrThrow(id);
+        AppUser app_user = getUserByIdOrThrow(id);
 
         // 1. Если пароль не указан - пропускаем обновление (для PATCH)
         if (password == null || password.isBlank()) {
@@ -128,7 +117,7 @@ public class UserService {
     //9. Обновление роли пользователя по айди
     @Transactional
     public UserResponseDto updateUserRoleById(Long id, String role) {
-        App_user app_user = getUserByIdOrThrow(id);
+        AppUser app_user = getUserByIdOrThrow(id);
 
         if (!UserRole.isValid(role)) {
             throw new IncorrectRoleTitleException(role);
@@ -167,17 +156,17 @@ public class UserService {
 
     //13. Вывод всех комментов пользователя по айди
     public Page<CommentResponseDto> findCommentsByUserId(Long userId, Pageable pageable) {
-        App_user app_user = getUserByIdOrThrow(userId);
+        AppUser app_user = getUserByIdOrThrow(userId);
         return commentService.getCommentsForUser(userId,pageable);
     }
 
     // Вспомогательный метод для преобразования коллекци пользователей в коллекцию ДТО
-    private Page<UserResponseDto> convertToDtoList(Page<App_user> app_users) {
+    private Page<UserResponseDto> convertToDtoList(Page<AppUser> app_users) {
         return app_users.map(UserResponseDto::new);
     }
 
-    // Вспомогательный метод для поиска пользователя по айди + валидация
-    private App_user getUserByIdOrThrow(Long id) {
+
+    private AppUser getUserByIdOrThrow(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UserIdNotFoundException(id));
     }

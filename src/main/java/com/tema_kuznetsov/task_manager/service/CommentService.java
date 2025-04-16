@@ -1,15 +1,14 @@
 package com.tema_kuznetsov.task_manager.service;
 
-import com.tema_kuznetsov.task_manager.dto.commentDto.CommentCreateDto;
-import com.tema_kuznetsov.task_manager.dto.commentDto.CommentResponseDto;
-import com.tema_kuznetsov.task_manager.dto.commentDto.CommentUpdateDto;
-import com.tema_kuznetsov.task_manager.dto.taskDto.TaskResponseDto;
+import com.tema_kuznetsov.task_manager.dto.comment.CommentCreateDto;
+import com.tema_kuznetsov.task_manager.dto.comment.CommentResponseDto;
+import com.tema_kuznetsov.task_manager.dto.comment.CommentUpdateDto;
 import com.tema_kuznetsov.task_manager.exception.commentException.CommentIdNotFoundException;
 import com.tema_kuznetsov.task_manager.exception.commentException.CommentTextLengthExceededException;
 import com.tema_kuznetsov.task_manager.exception.taskException.TaskIdNotFoundException;
-import com.tema_kuznetsov.task_manager.exception.userException.UserIdNotFoundException;
+import com.tema_kuznetsov.task_manager.exception.userException.emailException.UserEmailNotFoundException;
+import com.tema_kuznetsov.task_manager.model.AppUser;
 import com.tema_kuznetsov.task_manager.model.Comment;
-import com.tema_kuznetsov.task_manager.model.Task;
 import com.tema_kuznetsov.task_manager.model.constrain.CommentConstrains;
 import com.tema_kuznetsov.task_manager.repository.CommentRepository;
 import com.tema_kuznetsov.task_manager.repository.TaskRepository;
@@ -17,11 +16,10 @@ import com.tema_kuznetsov.task_manager.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @AllArgsConstructor // конструктор только для файнал полей
 @Service
@@ -36,8 +34,13 @@ public class CommentService {
         Comment comment = new Comment();
         comment.setText(dto.getText());
 
-        comment.setAuthor(userRepository.findById(dto.getUser_id())
-                .orElseThrow(() -> new UserIdNotFoundException(dto.getUser_id())));
+        // Извлекаем текущего пользователя из Authentication
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        AppUser owner = userRepository.findUserByEmail(username)
+                .orElseThrow(() -> new UserEmailNotFoundException(username));  // Получаем пользователя по email
+
+        comment.setAuthor(owner);
 
         comment.setTask(taskRepository.findById(dto.getTask_id())
                 .orElseThrow(() -> new TaskIdNotFoundException(dto.getTask_id())));
