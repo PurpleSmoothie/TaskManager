@@ -1,0 +1,28 @@
+spring.application.name=task-manager
+
+# Конфигурация для базы данных (используйте реальные значения локально)
+spring.datasource.url=jdbc:postgresql://localhost:5432/your-db-name
+spring.datasource.username=your-username
+spring.datasource.password=your-password
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# Настройки Jackson (сериализация и форматирование даты)
+spring.jackson.serialization.fail-on-empty-beans=false
+spring.jackson.default-property-inclusion=non_null
+spring.jackson.serialization.write-dates-as-timestamps=false
+spring.jackson.date-format=yyyy-MM-dd HH:mm:ss
+
+# Настройки Hibernate
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.properties.hibernate.format_sql=true
+
+# Настройки ошибок Spring
+server.error.include-message=always
+server.error.include-binding-errors=always
+
+# JWT настройки (не используйте реальные секреты и ключи в публичных версиях)
+jwt.secret=your-256-bit-secret-string-should-be-long
+jwt.expiration=86400000
+
+# Пример пароля для Spring Security (это значение для примера, используйте другое в продакшн)
+spring.security.user.password=your-secure-password
