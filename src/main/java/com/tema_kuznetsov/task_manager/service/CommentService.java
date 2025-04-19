@@ -30,7 +30,7 @@ public class CommentService {
 
     //1. Создание комментария
     @Transactional
-    public Comment createComment(CommentCreateDto dto) {
+    public CommentResponseDto createComment(CommentCreateDto dto) {
         Comment comment = new Comment();
         comment.setText(dto.getText());
 
@@ -45,7 +45,11 @@ public class CommentService {
         comment.setTask(taskRepository.findById(dto.getTask_id())
                 .orElseThrow(() -> new TaskIdNotFoundException(dto.getTask_id())));
 
-        return commentRepository.save(comment);
+        // Сохранение комментария
+        comment = commentRepository.save(comment);
+
+        // Возвращаем DTO
+        return new CommentResponseDto(comment);
     }
 
     //2. Получение комментария по айди

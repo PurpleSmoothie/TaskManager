@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -45,6 +45,7 @@ public class TaskController {
     })
     public ResponseEntity<TaskResponseDto> createTask(
             @Valid @RequestBody TaskCreateDto dto) {
+        System.out.println("DTO: " + dto);
 
         Task createdTask = taskService.createTask(dto);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -53,6 +54,7 @@ public class TaskController {
                 .toUri();
         return ResponseEntity.created(location).body(new TaskResponseDto(createdTask));
     }
+
 
     @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER', 'MODERATOR')")

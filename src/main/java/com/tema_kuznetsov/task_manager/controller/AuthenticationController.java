@@ -1,6 +1,7 @@
 package com.tema_kuznetsov.task_manager.controller;
 
 import com.tema_kuznetsov.task_manager.dto.security.JwtRequestDto;
+import com.tema_kuznetsov.task_manager.dto.security.JwtResponseDto;
 import com.tema_kuznetsov.task_manager.dto.user.UserCreateDto;
 import com.tema_kuznetsov.task_manager.dto.user.UserResponseDto;
 import com.tema_kuznetsov.task_manager.exception.userException.BadCredentialsException;
@@ -37,7 +38,7 @@ public class AuthenticationController {
             @ApiResponse(responseCode = "200", description = "JWT токен успешно получен"),
             @ApiResponse(responseCode = "400", description = "Неверные учетные данные"),
     })
-    public ResponseEntity<String> login(@RequestBody JwtRequestDto requestDto) {
+    public ResponseEntity<JwtResponseDto> login(@RequestBody JwtRequestDto requestDto) {
         String email = requestDto.getEmail();
         String password = requestDto.getPassword();
 
@@ -48,7 +49,7 @@ public class AuthenticationController {
         }
 
         String token = jwtService.generateToken(email);
-        return ResponseEntity.ok(token);
+        return ResponseEntity.ok(new JwtResponseDto(token));
     }
 
     @GetMapping("/validate")

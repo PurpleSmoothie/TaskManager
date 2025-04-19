@@ -3,7 +3,6 @@ package com.tema_kuznetsov.task_manager.controller;
 import com.tema_kuznetsov.task_manager.dto.comment.CommentCreateDto;
 import com.tema_kuznetsov.task_manager.dto.comment.CommentResponseDto;
 import com.tema_kuznetsov.task_manager.dto.comment.CommentUpdateDto;
-import com.tema_kuznetsov.task_manager.model.Comment;
 import com.tema_kuznetsov.task_manager.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -34,13 +33,13 @@ public class CommentController {
             @ApiResponse(responseCode = "400", description = "Неверные данные запроса")
     })
     public ResponseEntity<CommentResponseDto> createUser(@Valid @RequestBody CommentCreateDto dto) {
-        Comment createdComment = commentService.createComment(dto);
+        CommentResponseDto createdComment = commentService.createComment(dto);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(createdComment.getId())
                 .toUri();
-        return ResponseEntity.ok(new CommentResponseDto(createdComment));
+        return ResponseEntity.ok(createdComment);
     }
 
     // 2. Получение комментария по ID

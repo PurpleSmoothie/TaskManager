@@ -50,9 +50,9 @@ public class TaskService {
         task.setPriority(dto.getPriority());
         task.setOwner(owner);
 
-        if (dto.getPerformer_id() != null) {
-            task.setPerformer(userRepository.findById(dto.getPerformer_id())
-                    .orElseThrow(() -> new PerformerIdNotFoundException(dto.getPerformer_id())));
+        if (dto.getPerformerId() != null) {
+            task.setPerformer(userRepository.findById(dto.getPerformerId())
+                    .orElseThrow(() -> new PerformerIdNotFoundException(dto.getPerformerId())));
         }
 
         return taskRepository.save(task);

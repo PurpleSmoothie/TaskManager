@@ -37,14 +37,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String userEmail;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            logger.debug("Authorization header is missing or does not start with 'Bearer '");
             filterChain.doFilter(request, response);
             return;
         }
 
         jwt = authHeader.substring(7).replaceAll("\\s+", "");
+        logger.debug("Extracted JWT: {}", jwt);
 
         try {
             userEmail = jwtService.extractUsername(jwt);
+            logger.debug("Extracted username from token: {}", userEmail);
         } catch (Exception e) {
             logger.warn("Failed to extract username from token: {}", e.getMessage());
             filterChain.doFilter(request, response);
@@ -54,16 +57,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+                logger.debug("Loaded user details: {}", userDetails.getUsername());
+                logger.debug("User authorities: {}", userDetails.getAuthorities());
 
                 if (jwtService.isTokenValid(jwt, userDetails.getUsername())) {
+                    logger.debug("Token is valid for user: {}", userEmail);
+
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    logger.warn("Token is invalid for user: {}", userEmail);
                 }
+
             } catch (UsernameNotFoundException ex) {
                 logger.warn("JWT refers to non-existent user: {}", userEmail);
             }
+        } else {
+            logger.debug("User is already authenticated or username is null");
         }
 
         filterChain.doFilter(request, response);

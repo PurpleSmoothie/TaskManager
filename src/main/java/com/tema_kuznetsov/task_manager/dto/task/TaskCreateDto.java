@@ -7,33 +7,30 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
-/**
- * DTO для обновления задачи. Все поля опциональны (nullable).
- * При обновлении изменяются только переданные не-null поля.
- */
 @Getter
 @Setter
-    public class TaskCreateDto {
-        @NotBlank(message = "Title is required")
-        @Size(max = TaskConstrains.MAX_TITLE_LENGTH)
-        @UniqueTaskTitle
-        private String title;
+@ToString
+public class TaskCreateDto {
+    @NotBlank(message = "Title is required")
+    @Size(max = TaskConstrains.MAX_TITLE_LENGTH)
+    @UniqueTaskTitle
+    private String title;
 
-        @NotBlank(message = "Description is required")
-        @Size(max = TaskConstrains.MAX_DESC_LENGTH)
-        private String description;
+    @NotBlank(message = "Description is required")
+    @Size(max = TaskConstrains.MAX_DESC_LENGTH)
+    private String description;
 
-        private Long owner_id;
+    private Long ownerId;
 
-        @NotBlank(message = "Status is required")
-        @ValidTaskStatus
-        private String status;
+    @NotBlank(message = "Status is required")
+    @ValidTaskStatus
+    private String status;
 
-        @NotBlank(message = "Priority is required")
-        @ValidTaskPriority
-        private String priority;
+    @NotBlank(message = "Priority is required")
+    @ValidTaskPriority
+    private String priority;
 
-        private Long performer_id;
-    }
-
+    private Long performerId;
+}
