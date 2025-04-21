@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:15
+    container_name: task_db
+    environment:
+      POSTGRES_DB: taskdb
+      POSTGRES_USER: task_user
+      POSTGRES_PASSWORD: task_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - task-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U task_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: task_app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/taskdb
+      SPRING_DATASOURCE_USERNAME: task_user
+      SPRING_DATASOURCE_PASSWORD: task_pass
+    ports:
+      - "8080:8080"
+    networks:
+      - task-net
+
+volumes:
+  pgdata:
+
+networks:
+  task-net:

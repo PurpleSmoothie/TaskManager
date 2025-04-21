@@ -1,28 +1,33 @@
 spring.application.name=task-manager
 
-# Конфигурация для базы данных (используйте реальные значения локально)
+# --- Конфигурация подключения к базе данных ---
+# Замените на ваши реальные значения при локальном запуске
 spring.datasource.url=jdbc:postgresql://localhost:5432/your-db-name
 spring.datasource.username=your-username
 spring.datasource.password=your-password
 spring.datasource.driver-class-name=org.postgresql.Driver
 
-# Настройки Jackson (сериализация и форматирование даты)
+# --- Настройки Jackson (форматирование JSON и дат) ---
 spring.jackson.serialization.fail-on-empty-beans=false
 spring.jackson.default-property-inclusion=non_null
 spring.jackson.serialization.write-dates-as-timestamps=false
 spring.jackson.date-format=yyyy-MM-dd HH:mm:ss
 
-# Настройки Hibernate
+# --- Настройки Hibernate ---
 spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.show-sql=true
+logging.level.org.hibernate.SQL=DEBUG
+logging.level.org.hibernate.type.descriptor.sql=TRACE
 
-# Настройки ошибок Spring
+# --- Настройки обработки ошибок Spring ---
 server.error.include-message=always
 server.error.include-binding-errors=always
 
-# JWT настройки (не используйте реальные секреты и ключи в публичных версиях)
+# --- Настройки JWT ---
+# НЕ хардкодьте реальные значения в публичной версии
 jwt.secret=your-256-bit-secret-string-should-be-long
 jwt.expiration=86400000
 
-# Пример пароля для Spring Security (это значение для примера, используйте другое в продакшн)
+# --- Временный пароль для встроенного пользователя Spring Security (если используется) ---
 spring.security.user.password=your-secure-password

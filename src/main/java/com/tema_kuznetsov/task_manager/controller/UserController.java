@@ -83,7 +83,7 @@ public class UserController {
     })
     @GetMapping("/list")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
-    public ResponseEntity<Page<UserResponseDto>> findAllTasks(
+    public ResponseEntity<Page<UserResponseDto>> findAllUsers(
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(userService.findAllUsers(pageable));
     }

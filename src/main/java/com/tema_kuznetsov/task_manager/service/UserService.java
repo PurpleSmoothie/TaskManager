@@ -109,9 +109,11 @@ public class UserService {
             throw new InvalidPasswordException();
         }
 
-        app_user.setPassword(password);
-        return new UserResponseDto(app_user);
+        // Шифруем новый пароль перед сохранением
+        String encodedPassword = passwordEncoder.encode(password);
+        app_user.setPassword(encodedPassword); // Устанавливаем зашифрованный пароль
 
+        return new UserResponseDto(app_user);
     }
 
     //9. Обновление роли пользователя по айди
