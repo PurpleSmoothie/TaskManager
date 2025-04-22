@@ -3,7 +3,7 @@ package com.tema_kuznetsov.task_manager.dto.task;
 import com.tema_kuznetsov.task_manager.annotation.taskAnnotations.UniqueTaskTitle;
 import com.tema_kuznetsov.task_manager.annotation.taskAnnotations.ValidTaskPriority;
 import com.tema_kuznetsov.task_manager.annotation.taskAnnotations.ValidTaskStatus;
-import com.tema_kuznetsov.task_manager.model.constrain.TaskConstrains;
+import com.tema_kuznetsov.task_manager.models.constrain.TaskConstrains;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;

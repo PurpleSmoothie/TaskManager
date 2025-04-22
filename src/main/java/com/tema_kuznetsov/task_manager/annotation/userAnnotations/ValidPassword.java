@@ -1,6 +1,6 @@
 package com.tema_kuznetsov.task_manager.annotation.userAnnotations;
 
-import com.tema_kuznetsov.task_manager.validator.userValidator.UserPasswordValidator;
+import com.tema_kuznetsov.task_manager.validators.userValidator.UserPasswordValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 import java.lang.annotation.*;

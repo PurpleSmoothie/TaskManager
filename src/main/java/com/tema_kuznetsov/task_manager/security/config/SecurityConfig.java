@@ -2,7 +2,7 @@ package com.tema_kuznetsov.task_manager.security.config;
 
 import com.tema_kuznetsov.task_manager.security.jwt.JwtAuthenticationFilter;
 import com.tema_kuznetsov.task_manager.security.jwt.JwtService;
-import com.tema_kuznetsov.task_manager.service.CustomUserDetailsService;
+import com.tema_kuznetsov.task_manager.services.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

@@ -3,7 +3,7 @@ services:
     image: postgres:15
     container_name: task_db
     environment:
-      POSTGRES_DB: taskdb
+      POSTGRES_DB: task_db
       POSTGRES_USER: task_user
       POSTGRES_PASSWORD: task_pass
     ports:
@@ -14,7 +14,7 @@ services:
     networks:
       - task-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U task_user"]
+      test: [ "CMD-SHELL", "pg_isready -U task_user -d task_db" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,7 +26,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/taskdb
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/task_db
       SPRING_DATASOURCE_USERNAME: task_user
       SPRING_DATASOURCE_PASSWORD: task_pass
     ports:

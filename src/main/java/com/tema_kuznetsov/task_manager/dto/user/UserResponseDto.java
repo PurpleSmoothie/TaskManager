@@ -1,6 +1,6 @@
 package com.tema_kuznetsov.task_manager.dto.user;
 
-import com.tema_kuznetsov.task_manager.model.AppUser;
+import com.tema_kuznetsov.task_manager.models.AppUser;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;

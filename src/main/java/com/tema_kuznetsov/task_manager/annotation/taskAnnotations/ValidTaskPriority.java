@@ -1,7 +1,6 @@
 package com.tema_kuznetsov.task_manager.annotation.taskAnnotations;
 
-import com.tema_kuznetsov.task_manager.model.enums.TaskPriority;
-import com.tema_kuznetsov.task_manager.validator.taskValidator.TaskPriorityValidator;
+import com.tema_kuznetsov.task_manager.validators.taskValidator.TaskPriorityValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 import java.lang.annotation.Target;

@@ -3,7 +3,7 @@ package com.tema_kuznetsov.task_manager.dto.user;
 import com.tema_kuznetsov.task_manager.annotation.userAnnotations.UniqueUserEmail;
 import com.tema_kuznetsov.task_manager.annotation.userAnnotations.UniqueUserLogin;
 import com.tema_kuznetsov.task_manager.annotation.userAnnotations.ValidPassword;
-import com.tema_kuznetsov.task_manager.model.constrain.UserConstrains;
+import com.tema_kuznetsov.task_manager.models.constrain.UserConstrains;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;

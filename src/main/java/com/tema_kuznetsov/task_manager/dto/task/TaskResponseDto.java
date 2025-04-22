@@ -1,8 +1,7 @@
 package com.tema_kuznetsov.task_manager.dto.task;
 
-import com.tema_kuznetsov.task_manager.model.Task;
+import com.tema_kuznetsov.task_manager.models.Task;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

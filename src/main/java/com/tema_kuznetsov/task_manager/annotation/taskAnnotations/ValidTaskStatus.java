@@ -1,6 +1,6 @@
 package com.tema_kuznetsov.task_manager.annotation.taskAnnotations;
 
-import com.tema_kuznetsov.task_manager.validator.taskValidator.TaskStatusValidator;
+import com.tema_kuznetsov.task_manager.validators.taskValidator.TaskStatusValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 import java.lang.annotation.Target;

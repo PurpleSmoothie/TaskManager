@@ -1,6 +1,6 @@
 package com.tema_kuznetsov.task_manager.security.jwt;
 
-import com.tema_kuznetsov.task_manager.service.TaskService;
+import com.tema_kuznetsov.task_manager.services.TaskService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 

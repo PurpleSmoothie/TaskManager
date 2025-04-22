@@ -36,7 +36,7 @@ ALTER TABLE tasks ADD CONSTRAINT chk_priority
     CHECK (priority IN ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL'));
 
 
-ALTER TABLE App_users ADD CONSTRAINT chk_role
+ALTER TABLE app_users ADD CONSTRAINT chk_role
     CHECK(role IN ('ADMIN', 'USER', 'MODERATOR'));
 
 -- Для пользователей

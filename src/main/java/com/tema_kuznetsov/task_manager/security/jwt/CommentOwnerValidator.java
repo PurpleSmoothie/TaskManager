@@ -1,6 +1,6 @@
 package com.tema_kuznetsov.task_manager.security.jwt;
 
-import com.tema_kuznetsov.task_manager.repository.CommentRepository;
+import com.tema_kuznetsov.task_manager.repositories.CommentRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 

@@ -1,6 +1,6 @@
 package com.tema_kuznetsov.task_manager.security.jwt;
 
-import com.tema_kuznetsov.task_manager.service.CustomUserDetailsService;
+import com.tema_kuznetsov.task_manager.services.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

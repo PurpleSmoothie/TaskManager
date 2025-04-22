@@ -1,6 +1,6 @@
 package com.tema_kuznetsov.task_manager.security;
 
-import com.tema_kuznetsov.task_manager.model.AppUser;
+import com.tema_kuznetsov.task_manager.models.AppUser;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

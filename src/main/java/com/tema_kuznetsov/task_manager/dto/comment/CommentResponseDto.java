@@ -1,6 +1,6 @@
 package com.tema_kuznetsov.task_manager.dto.comment;
 
-import com.tema_kuznetsov.task_manager.model.Comment;
+import com.tema_kuznetsov.task_manager.models.Comment;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
