@@ -17,6 +17,5 @@ public class TaskStatus {
         );
     }
 
-    // Список cтатусов для ошибки
     public static final Set<String> VALID_STATUSES = Set.of("OPEN", "IN_PROGRESS", "COMPLETED", "CANCELLED");
 }

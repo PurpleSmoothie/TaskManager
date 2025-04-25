@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,61 +23,71 @@ import java.net.URI;
 @RequiredArgsConstructor
 @Tag(name = "Comments", description = "Управление комментариями")
 public class CommentController {
+
     private final CommentService commentService;
 
-    // 1. Создание комментария
     @PostMapping("/create")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER', 'MODERATOR')")
     @Operation(summary = "Создать комментарий", description = "Доступно для ролей: ADMIN, USER, MODERATOR")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Комментарий успешно создан"),
-            @ApiResponse(responseCode = "400", description = "Неверные данные запроса")
+            @ApiResponse(responseCode = "201", description = "Комментарий успешно создан"),
+            @ApiResponse(responseCode = "400", description = "Неверные данные запроса"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)")
     })
-    public ResponseEntity<CommentResponseDto> createUser(@Valid @RequestBody CommentCreateDto dto) {
+    public ResponseEntity<CommentResponseDto> createComment(@Valid @RequestBody CommentCreateDto dto) {
         CommentResponseDto createdComment = commentService.createComment(dto);
-
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(createdComment.getId())
                 .toUri();
-        return ResponseEntity.ok(createdComment);
+        return ResponseEntity.created(location).body(createdComment);
     }
 
-    // 2. Получение комментария по ID
     @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER', 'MODERATOR')")
     @Operation(summary = "Получить комментарий по ID", description = "Доступно для ролей ADMIN, USER, MODERATOR")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Комментарий найден"),
-            @ApiResponse(responseCode = "404", description = "Комментарий не найден")
+            @ApiResponse(responseCode = "404", description = "Комментарий не найден"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)")
     })
-    public ResponseEntity<CommentResponseDto> findCommentById(@PathVariable Long id) {
+    public ResponseEntity<CommentResponseDto> findCommentById(
+            @PathVariable @Min(value = 1, message = "ID должен быть положительным") Long id) {
         return ResponseEntity.ok(commentService.findCommentById(id));
     }
 
-    // 3. Удаление комментария по ID
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or @commentOwnerValidator.isCommentOwner(#id, authentication)")
     @Operation(summary = "Удалить комментарий по ID", description = "Доступно владельцу комментария или ADMIN")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Комментарий удален"),
-            @ApiResponse(responseCode = "403", description = "Доступ запрещен или комментарий не найден")
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен"),
+            @ApiResponse(responseCode = "404", description = "Комментарий не найден"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)"),
+            @ApiResponse(responseCode = "400", description = "Неверный ID")
     })
-    public ResponseEntity<Void> deleteCommentById(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCommentById(
+            @PathVariable @Min(value = 1, message = "ID должен быть положительным") Long id) {
         commentService.deleteCommentById(id);
         return ResponseEntity.noContent().build();
     }
 
-    // 4. Обновление комментария
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or @commentOwnerValidator.isCommentOwner(#id, authentication)")
     @Operation(summary = "Обновить комментарий", description = "Доступно владельцу комментария или ADMIN")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Комментарий обновлен"),
-            @ApiResponse(responseCode = "403", description = "Доступ запрещен или комментарий не найден")
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен"),
+            @ApiResponse(responseCode = "404", description = "Комментарий не найден"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)"),
+            @ApiResponse(responseCode = "400", description = "Неверный ID или тело запроса")
     })
-    public ResponseEntity<CommentResponseDto> updateTask(
-            @PathVariable Long id,
+    public ResponseEntity<CommentResponseDto> updateComment(
+            @PathVariable @Min(value = 1, message = "ID должен быть положительным") Long id,
             @RequestBody @Valid CommentUpdateDto commentUpdateDto
     ) {
         CommentResponseDto updatedComment = commentService.updateCommentById(id, commentUpdateDto);

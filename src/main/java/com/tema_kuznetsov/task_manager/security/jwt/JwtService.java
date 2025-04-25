@@ -32,7 +32,7 @@ public class JwtService {
     }
 
     public String extractUsername(String token) {
-        System.out.println("Extracting username from token: " + token);
+        System.out.println("Извлечение имени пользователя из токена: " + token);
         return extractClaims(token, Claims::getSubject);
     }
 
@@ -40,10 +40,10 @@ public class JwtService {
         try {
             String extractedUsername = extractUsername(token);
             boolean isValid = extractedUsername.equals(userEmail) && !isTokenExpired(token);
-            System.out.println("Token valid: " + isValid); // Логирование результата
+            System.out.println("Токен действителен: " + isValid);
             return isValid;
         } catch (Exception e) {
-            System.out.println("Error validating token: " + e.getMessage());
+            System.out.println("Ошибка при проверке токена: " + e.getMessage());
             return false;
         }
     }
@@ -53,7 +53,7 @@ public class JwtService {
     }
 
     private <T> T extractClaims(String token, Function<Claims, T> claimsResolver) {
-        Claims claims = Jwts.parserBuilder() // Используем новый подход
+        Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSignInKey())
                 .build()
                 .parseClaimsJws(token)

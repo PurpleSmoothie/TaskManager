@@ -58,7 +58,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     public AppUser createUser(@Valid UserCreateDto dto) {
         AppUser appUser = new AppUser();
         appUser.setLogin(dto.getLogin());
-        appUser.setRole(UserRole.USER.toString());
+        appUser.setRole(UserRole.USER);
         appUser.setEmail(dto.getEmail());
         appUser.setPassword(passwordEncoder.encode(dto.getPassword()));
         logger.info("Creating user with email: {}", dto.getEmail());

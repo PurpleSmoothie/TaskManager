@@ -1,10 +1,15 @@
 package com.tema_kuznetsov.task_manager.controllers;
 
+import com.tema_kuznetsov.task_manager.util.ErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import com.tema_kuznetsov.task_manager.dto.security.JwtRequestDto;
 import com.tema_kuznetsov.task_manager.dto.security.JwtResponseDto;
 import com.tema_kuznetsov.task_manager.dto.user.UserCreateDto;
 import com.tema_kuznetsov.task_manager.dto.user.UserResponseDto;
-import com.tema_kuznetsov.task_manager.exceptions.userException.BadCredentialsException;
 import com.tema_kuznetsov.task_manager.models.AppUser;
 import com.tema_kuznetsov.task_manager.security.jwt.JwtService;
 import com.tema_kuznetsov.task_manager.services.CustomUserDetailsService;
@@ -14,13 +19,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -28,52 +33,83 @@ import java.net.URI;
 @Tag(name = "Auth", description = "Аутентификация и регистрация пользователей")
 public class AuthenticationController {
 
+    private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService userDetailsService;
     private final JwtService jwtService;
-    private final PasswordEncoder passwordEncoder;
 
-    @PostMapping("/login")
-    @Operation(summary = "Вход пользователя", description = "Позволяет пользователю войти и получить JWT токен")
+
+    @Operation(summary = "Авторизация пользователя",
+            description = "Позволяет войти в систему и получить JWT токен по email и паролю")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "JWT токен успешно получен"),
-            @ApiResponse(responseCode = "400", description = "Неверные учетные данные"),
+            @ApiResponse(responseCode = "200", description = "Успешная авторизация, возвращается JWT токен"),
+            @ApiResponse(responseCode = "401", description = "Неверный логин или пароль")
     })
-    public ResponseEntity<JwtResponseDto> login(@RequestBody JwtRequestDto requestDto) {
-        String email = requestDto.getEmail();
-        String password = requestDto.getPassword();
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody JwtRequestDto loginRequest) {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getPassword()
+                    )
+            );
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            UserDetails user = userDetailsService.loadUserByUsername(loginRequest.getEmail());
+            String token = jwtService.generateToken(user.getUsername());
 
-        if (!passwordEncoder.matches(password, userDetails.getPassword())) {
-            throw new BadCredentialsException();
+            return ResponseEntity.ok(new JwtResponseDto(token));
+
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of(
+                            "status", 401,
+                            "error", "Unauthorized",
+                            "message", "Неверный логин или пароль",
+                            "path", "/api/auth/login"
+                    ));
         }
-
-        String token = jwtService.generateToken(email);
-        return ResponseEntity.ok(new JwtResponseDto(token));
     }
 
     @GetMapping("/validate")
     @Operation(summary = "Валидация JWT токена", description = "Проверка действительности переданного JWT токена")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Токен валиден"),
-            @ApiResponse(responseCode = "400", description = "Неверный формат токена")
+            @ApiResponse(responseCode = "401", description = "Невалидный или отсутствующий JWT токен"),
     })
-    public ResponseEntity<Boolean> validateToken(@RequestHeader("Authorization") String token) {
-        if (token.startsWith("Bearer ")) {
-            token = token.substring(7);
+    public ResponseEntity<?> validateToken(@RequestHeader(value = "Authorization", required = false) String token,
+                                           HttpServletRequest request) {
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                    new ErrorResponse(
+                            HttpStatus.UNAUTHORIZED,
+                            "Невалидный или отсутствующий JWT токен",
+                            request.getRequestURI()
+                    )
+            );
         }
 
+        token = token.substring(7);
         String email = jwtService.extractUsername(token);
-        boolean isValid = jwtService.isTokenValid(token, email);
 
-        return ResponseEntity.ok(isValid);
+        if (!jwtService.isTokenValid(token, email)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                    new ErrorResponse(
+                            HttpStatus.UNAUTHORIZED,
+                            "Невалидный или отсутствующий JWT токен",
+                            request.getRequestURI()
+                    )
+            );
+        }
+
+        return ResponseEntity.ok(true);
     }
 
     @PostMapping("/register")
-    @Operation(summary = "Регистрация нового пользователя", description = "Создание нового пользователя с указанием роли")
+    @Operation(summary = "Регистрация нового пользователя", description = "Создание нового пользователя с ролью USER")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Пользователь успешно зарегистрирован"),
+            @ApiResponse(responseCode = "201", description = "Пользователь успешно зарегистрирован"),
             @ApiResponse(responseCode = "400", description = "Некорректные данные регистрации"),
+
     })
     public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserCreateDto dto) {
         AppUser createdUser = userDetailsService.createUser(dto);
@@ -82,6 +118,6 @@ public class AuthenticationController {
                 .path("/{id}")
                 .buildAndExpand(createdUser.getId())
                 .toUri();
-        return ResponseEntity.ok(new UserResponseDto(createdUser));
+        return ResponseEntity.created(location).body(new UserResponseDto(createdUser));
     }
 }

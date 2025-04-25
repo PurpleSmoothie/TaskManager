@@ -2,6 +2,6 @@ package com.tema_kuznetsov.task_manager.exceptions.userException.performerExcept
 
 public class PerformerIdNotFoundException extends RuntimeException {
     public PerformerIdNotFoundException(Long id) {
-       super("Performer not found with id: " + id);
+        super("Исполнитель с id " + id + " не найден");
     }
 }

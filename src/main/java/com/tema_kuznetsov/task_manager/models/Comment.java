@@ -1,6 +1,6 @@
 package com.tema_kuznetsov.task_manager.models;
 
-import com.tema_kuznetsov.task_manager.models.constrain.CommentConstrains;
+import com.tema_kuznetsov.task_manager.models.constrains.CommentConstrains;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

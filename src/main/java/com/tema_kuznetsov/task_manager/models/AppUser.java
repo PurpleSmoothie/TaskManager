@@ -1,6 +1,6 @@
 package com.tema_kuznetsov.task_manager.models;
 
-import com.tema_kuznetsov.task_manager.models.constrain.UserConstrains;
+import com.tema_kuznetsov.task_manager.models.constrains.UserConstrains;
 import com.tema_kuznetsov.task_manager.models.enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;

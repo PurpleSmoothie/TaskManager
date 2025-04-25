@@ -10,9 +10,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-    // 1. Поиск всех комментариев задачи по айди
     Page<Comment> findByTaskIdOrderByCreatedAtDesc(Long taskId, Pageable pageable);
 
-    // 2. Поиск всех комментариев пользователя по айди(с пагинацией)
     Page<Comment> findByAuthorIdOrderByCreatedAtDesc(Long authorId, Pageable pageable);
 }

@@ -5,26 +5,29 @@ import com.tema_kuznetsov.task_manager.dto.task.TaskCreateDto;
 import com.tema_kuznetsov.task_manager.dto.task.TaskResponseDto;
 import com.tema_kuznetsov.task_manager.dto.task.TaskUpdateDto;
 import com.tema_kuznetsov.task_manager.models.Task;
+import com.tema_kuznetsov.task_manager.models.constrains.TaskConstrains;
 import com.tema_kuznetsov.task_manager.services.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.constraints.*;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
-
 import static org.springframework.data.domain.Sort.Direction.DESC;
 
+@Validated
 @RestController
 @RequestMapping("/api/tasks")
 @RequiredArgsConstructor
@@ -40,13 +43,12 @@ public class TaskController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Задача успешно создана"),
-            @ApiResponse(responseCode = "400", description = "Неверный запрос, ошибка в данных"),
-            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
+            @ApiResponse(responseCode = "400", description = "Неверный формат данных"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)")
     })
     public ResponseEntity<TaskResponseDto> createTask(
             @Valid @RequestBody TaskCreateDto dto) {
-        System.out.println("DTO: " + dto);
-
         Task createdTask = taskService.createTask(dto);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -55,8 +57,7 @@ public class TaskController {
         return ResponseEntity.created(location).body(new TaskResponseDto(createdTask));
     }
 
-
-    @GetMapping("/{id:\\d+}")
+    @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER', 'MODERATOR')")
     @Operation(
             summary = "Получить задачу по ID",
@@ -65,9 +66,14 @@ public class TaskController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Задача найдена"),
             @ApiResponse(responseCode = "404", description = "Задача с данным ID не найдена"),
-            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
+            @ApiResponse(responseCode = "400", description = "Неверный формат идентификатора"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)")
     })
-    public ResponseEntity<TaskResponseDto> findTaskById(@PathVariable Long id) {
+    public ResponseEntity<TaskResponseDto> findTaskById(
+            @PathVariable
+            @Min(value = 1, message = "ID должен быть положительным")
+            Long id) {
         return ResponseEntity.ok(taskService.findTaskById(id));
     }
 
@@ -80,9 +86,17 @@ public class TaskController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Задача найдена"),
             @ApiResponse(responseCode = "404", description = "Задача с данным названием не найдена"),
-            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
+            @ApiResponse(responseCode = "400", description = "Неверный формат названия"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)")
     })
-    public ResponseEntity<TaskResponseDto> findTaskByExactTitle(@RequestParam String title) {
+    public ResponseEntity<TaskResponseDto> findTaskByExactTitle(
+            @RequestParam
+            @NotBlank(message = "Название обязательно")
+            @Size(min = TaskConstrains.MIN_TITLE_LENGTH, max = TaskConstrains.MAX_TITLE_LENGTH,
+                    message = "Название должно содержать от " + TaskConstrains.MIN_TITLE_LENGTH +
+                            " до " + TaskConstrains.MAX_TITLE_LENGTH + " символов")
+            String title) {
         return ResponseEntity.ok(taskService.findTaskByExactTitle(title));
     }
 
@@ -95,12 +109,17 @@ public class TaskController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Задачи найдены"),
             @ApiResponse(responseCode = "404", description = "Задачи с данным названием не найдены"),
-            @ApiResponse(responseCode = "403", description = "Доступ запрещен")
+            @ApiResponse(responseCode = "400", description = "Неверный формат названия"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)")
     })
     public ResponseEntity<Page<TaskResponseDto>> findTaskByTitleContaining(
+            @NotBlank(message = "Название обязательно")
+            @Size(max = TaskConstrains.MAX_TITLE_LENGTH,
+                    message = "Название должно содержать до " + TaskConstrains.MAX_TITLE_LENGTH + " символов")
             @RequestParam String titlePart,
+            @ParameterObject
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-
         return ResponseEntity.ok(taskService.findTaskByTitleContaining(titlePart, pageable));
     }
 
@@ -112,11 +131,13 @@ public class TaskController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Задачи успешно получены"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)"),
             @ApiResponse(responseCode = "403", description = "Доступ запрещен")
     })
     public ResponseEntity<Page<TaskResponseDto>> findAllTasks(
+            @ParameterObject
             @PageableDefault(size = 10, sort = "createdAt", direction = DESC) Pageable pageable) {
-
         return ResponseEntity.ok(taskService.findAllTasks(pageable));
     }
 
@@ -128,15 +149,18 @@ public class TaskController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Задача успешно обновлена"),
-            @ApiResponse(responseCode = "404", description = "Задача с данным ID не найдена"),
+            @ApiResponse(responseCode = "404", description = "Задача с данным идентификатором не найдена"),
+            @ApiResponse(responseCode = "400", description = "Неверный формат данных"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)"),
             @ApiResponse(responseCode = "403", description = "Доступ запрещен")
     })
     public ResponseEntity<TaskResponseDto> updateTask(
-            @PathVariable Long id,
-            @RequestBody @Valid TaskUpdateDto updateDto) {
-
-        TaskResponseDto updatedTask = taskService.updateTaskById(id, updateDto);
-        return ResponseEntity.ok(updatedTask);
+            @PathVariable
+            @Min(value = 1, message = "ID должен быть положительным")
+            Long id,
+            @Valid @RequestBody TaskUpdateDto updateDto) {
+        return ResponseEntity.ok(taskService.updateTaskById(id, updateDto));
     }
 
     @DeleteMapping("/{id}")
@@ -148,9 +172,15 @@ public class TaskController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Задача успешно удалена"),
             @ApiResponse(responseCode = "404", description = "Задача с данным ID не найдена"),
+            @ApiResponse(responseCode = "400", description = "Неверный формат идентификатора"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)"),
             @ApiResponse(responseCode = "403", description = "Доступ запрещен")
     })
-    public ResponseEntity<Void> deleteTaskById(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTaskById(
+            @PathVariable
+            @Min(value = 1, message = "ID должен быть положительным")
+            Long id) {
         taskService.deleteTaskById(id);
         return ResponseEntity.noContent().build();
     }
@@ -164,65 +194,95 @@ public class TaskController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Задача успешно удалена"),
             @ApiResponse(responseCode = "404", description = "Задача с данным названием не найдена"),
+            @ApiResponse(responseCode = "400", description = "Неверный формат названия"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)"),
             @ApiResponse(responseCode = "403", description = "Доступ запрещен")
     })
-    public ResponseEntity<Void> deleteTaskByTitle(@PathVariable String title) {
+    public ResponseEntity<Void> deleteTaskByTitle(
+            @PathVariable
+            @NotBlank(message = "Название обязательно")
+            @Size(min = TaskConstrains.MIN_TITLE_LENGTH, max = TaskConstrains.MAX_TITLE_LENGTH,
+                    message = "Название должно содержать от " + TaskConstrains.MIN_TITLE_LENGTH +
+                            " до " + TaskConstrains.MAX_TITLE_LENGTH + " символов")
+            String title) {
         taskService.deleteTaskByTitle(title);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasRole('ADMIN') or @taskOwnerValidator.isTaskPerformer(#id, authentication)")
+    @PreAuthorize("hasRole('ADMIN') or @taskOwnerValidator.isTaskOwner(#id, authentication) " +
+            "or @taskOwnerValidator.isTaskPerformer(#id, authentication)")
     @Operation(
             summary = "Обновить статус задачи",
-            description = "Доступно исполнителю задачи или ADMIN"
+            description = "Доступно владельцу задачи, исполнителю задачи или ADMIN"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Статус задачи успешно обновлен"),
             @ApiResponse(responseCode = "404", description = "Задача с данным ID не найдена"),
+            @ApiResponse(responseCode = "400", description = "Неверный формат статуса"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)"),
             @ApiResponse(responseCode = "403", description = "Доступ запрещен")
     })
     public ResponseEntity<TaskResponseDto> updateTaskStatusById(
-            @PathVariable Long id,
-            @RequestParam String status) {
-
+            @PathVariable
+            @Min(value = 1, message = "ID должен быть положительным")
+            Long id,
+            @RequestParam
+            @Pattern(regexp = "OPEN|IN_PROGRESS|COMPLETED|CANCELLED",
+                    message = "Допустимые статусы: OPEN, IN_PROGRESS, COMPLETED, CANCELLED")
+            String status) {
         return ResponseEntity.ok(taskService.updateTaskStatusById(id, status));
     }
 
     @PatchMapping("/{id}/priority")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or @taskOwnerValidator.isTaskOwner(#id, authentication) " +
+            "or @taskOwnerValidator.isTaskPerformer(#id, authentication)")
     @Operation(
             summary = "Обновить приоритет задачи",
-            description = "Доступно только для ADMIN"
+            description = "Доступно владельцу задачи, исполнителю задачи или ADMIN"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Приоритет задачи успешно обновлен"),
             @ApiResponse(responseCode = "404", description = "Задача с данным ID не найдена"),
+            @ApiResponse(responseCode = "400", description = "Неверный формат приоритета"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)"),
             @ApiResponse(responseCode = "403", description = "Доступ запрещен")
     })
     public ResponseEntity<TaskResponseDto> updateTaskPriorityById(
-            @PathVariable Long id,
-            @RequestParam String priority) {
-
+            @PathVariable
+            @Min(value = 1, message = "ID должен быть положительным")
+            Long id,
+            @RequestParam
+            @Pattern(regexp = "LOW|MEDIUM|HIGH|CRITICAL", message = "Допустимые приоритеты: LOW, MEDIUM, HIGH, CRITICAL")
+            String priority) {
         return ResponseEntity.ok(taskService.updateTaskPriorityById(id, priority));
     }
 
     @PatchMapping("/{id}/performer")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or @taskOwnerValidator.isTaskOwner(#id, authentication)")
     @Operation(
             summary = "Назначить исполнителя задачи",
-            description = "Доступно только для ADMIN"
+            description = "Доступно только для ADMIN или владельца задачи"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Исполнитель задачи успешно обновлен"),
             @ApiResponse(responseCode = "404", description = "Задача с данным ID не найдена"),
+            @ApiResponse(responseCode = "400", description = "Неверный формат идентификатора"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)"),
             @ApiResponse(responseCode = "403", description = "Доступ запрещен")
     })
     public ResponseEntity<TaskResponseDto> updateTaskPerformerById(
-            @PathVariable Long id,
-            @RequestParam Long performer_id) {
-
-        return ResponseEntity.ok(taskService.updateTaskPerformer(id, performer_id));
+            @PathVariable
+            @Min(value = 1, message = "ID задачи должен быть положительным")
+            Long id,
+            @RequestParam
+            @Min(value = 1, message = "ID исполнителя должен быть положительным")
+            Long performerId) {
+        return ResponseEntity.ok(taskService.updateTaskPerformer(id, performerId));
     }
 
     @GetMapping("/search/status")
@@ -233,13 +293,18 @@ public class TaskController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Задачи успешно найдены"),
-            @ApiResponse(responseCode = "404", description = "Задачи с данным статусом не найдены"),
+            @ApiResponse(responseCode = "400", description = "Неверный формат статуса"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)"),
             @ApiResponse(responseCode = "403", description = "Доступ запрещен")
     })
     public ResponseEntity<Page<TaskResponseDto>> findTasksByStatus(
-            @RequestParam String status,
+            @RequestParam
+            @Pattern(regexp = "OPEN|IN_PROGRESS|COMPLETED|CANCELLED",
+                    message = "Допустимые статусы: OPEN, IN_PROGRESS, COMPLETED, CANCELLED")
+            String status,
+            @ParameterObject
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-
         return ResponseEntity.ok(taskService.findTasksByStatus(status, pageable));
     }
 
@@ -251,31 +316,40 @@ public class TaskController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Задачи успешно найдены"),
-            @ApiResponse(responseCode = "404", description = "Задачи с данным приоритетом не найдены"),
+            @ApiResponse(responseCode = "400", description = "Неверный формат приоритета"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)"),
             @ApiResponse(responseCode = "403", description = "Доступ запрещен")
     })
     public ResponseEntity<Page<TaskResponseDto>> findTasksByPriority(
-            @RequestParam String priority,
+            @RequestParam
+            @Pattern(regexp = "LOW|MEDIUM|HIGH|CRITICAL",
+                    message = "Допустимые приоритеты: LOW, MEDIUM, HIGH, CRITICAL")
+            String priority,
+            @ParameterObject
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-
         return ResponseEntity.ok(taskService.findTasksByPriority(priority, pageable));
     }
 
     @GetMapping("{id}/comments")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     @Operation(
-            summary = "Получить комментарии задачи",
-            description = "Выводит все комментарии к задаче, доступно для ADMIN и MODERATOR, поддерживает пагинацию"
+            summary = "Получить все комментарии к задаче",
+            description = "Доступно для ADMIN и MODERATOR, поддерживает пагинацию"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Комментарии получены"),
-            @ApiResponse(responseCode = "404", description = "Комментарии для данной задачи не найдены"),
+            @ApiResponse(responseCode = "400", description = "Неверный формат идентификатора"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)"),
             @ApiResponse(responseCode = "403", description = "Доступ запрещен")
     })
     public ResponseEntity<Page<CommentResponseDto>> findCommentsByTaskId(
-            @PathVariable Long id,
+            @PathVariable
+            @Min(value = 1, message = "ID задачи должен быть положительным")
+            Long id,
+            @ParameterObject
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-
         return ResponseEntity.ok(taskService.findCommentsByTaskId(id, pageable));
     }
 }

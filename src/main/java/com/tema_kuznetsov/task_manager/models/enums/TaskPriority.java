@@ -17,6 +17,5 @@ public class TaskPriority {
         );
     }
 
-    // Список приоритетов для ошибки
     public static final Set<String> VALID_PRIORITIES = Set.of("LOW", "MEDIUM", "HIGH", "CRITICAL");
 }

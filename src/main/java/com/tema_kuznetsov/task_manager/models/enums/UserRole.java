@@ -15,6 +15,5 @@ public class UserRole {
         );
     }
 
-    // Список ролей для ошибки
     public static final Set<String> VALID_ROLES = Set.of(ADMIN, USER, MODERATOR);
 }

@@ -4,7 +4,6 @@ import com.tema_kuznetsov.task_manager.models.AppUser;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.time.LocalDateTime;
 
 @Getter

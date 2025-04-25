@@ -14,22 +14,17 @@ import java.util.Optional;
 
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
-    // Базовые методы (уже есть в JpaRepository):
-    // save(), findById(), findAll(), deleteById(), count() и т.д.
-
 
     boolean existsByTitle(String title);
-    Optional<Task> findTaskByTitle(String title); // Важно: возвращаем Optional
-    Page<Task> findTaskByTitleContaining(String titlePart, Pageable pageable); // По части названия
+    Optional<Task> findTaskByTitle(String title);
+    Page<Task> findTaskByTitleContaining(String titlePart, Pageable pageable);
     Page<Task> findAll(Pageable pageable);
 
-    // Фильтрация по статусу и приоритету
     Page<Task> findTasksByStatus(String status, Pageable pageable);
     Page<Task> findTasksByPriority(String priority, Pageable pageable);
 
-    @Transactional // Весь метод выполняется как одна транзакция
-    @Modifying // Указывает, что запрос изменяет данные (не SELECT)
-               // Требуется для INSERT, UPDATE, DELETE операций
+    @Transactional
+    @Modifying
     @Query("DELETE FROM Task t WHERE t.title = :title")
     void deleteTaskByTitle(@Param("title") String title);
 }
