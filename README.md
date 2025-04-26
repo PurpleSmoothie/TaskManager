@@ -72,6 +72,13 @@ docker-compose up --build
 ```
 http://localhost:8080/swagger-ui/index.html
 ```
+## 🧑‍💻 Демо-пользователи для тестирования
+Для удобства тестирования в базу данных автоматически добавляются 3 пользователя с разными ролями:
+
+Email	              Роль	       Логин	        Пароль
+admin@mail.com	      ADMIN	       test-admin	    test-admin
+user@mail.com	      USER	       test-user	    test-user
+moderator@mail.com	  MODERATOR	   test-moderator	test-moderator
 
 ## 🔐 Аутентификация и роли
 

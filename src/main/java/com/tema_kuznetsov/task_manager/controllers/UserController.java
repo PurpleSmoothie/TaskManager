@@ -4,6 +4,7 @@ import com.tema_kuznetsov.task_manager.dto.comment.CommentResponseDto;
 import com.tema_kuznetsov.task_manager.dto.user.UserResponseDto;
 import com.tema_kuznetsov.task_manager.dto.user.UserUpdateDto;
 import com.tema_kuznetsov.task_manager.models.constrains.UserConstrains;
+import com.tema_kuznetsov.task_manager.security.CustomUserDetails;
 import com.tema_kuznetsov.task_manager.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +33,18 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Users", description = "Управление пользователями")
 public class UserController {
     private final UserService userService;
+
+    @Operation(summary = "Получить информацию о себе", description = "Доступно всем авторизованным пользователям")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Информация о пользователе получена"),
+            @ApiResponse(responseCode = "401", description = "Пользователь не авторизован " +
+                    "(JWT токен отсутствует или некорректен)")
+    })
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserResponseDto> getMe(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        return ResponseEntity.ok(userService.findUserById(customUserDetails.getId()));
+    }
 
     @Operation(summary = "Получить пользователя по ID", description = "Доступно администраторам и модераторам")
     @ApiResponses({

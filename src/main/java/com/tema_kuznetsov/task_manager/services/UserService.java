@@ -30,6 +30,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$");
 
+
     public UserResponseDto findUserById(Long id) {
         AppUser appUser = getUserByIdOrThrow(id);
         return new UserResponseDto(appUser);
@@ -42,7 +43,6 @@ public class UserService {
     }
 
     public UserResponseDto findUserByEmail(String email) {
-
         AppUser appUser = userRepository.findUserByEmail(email)
                 .orElseThrow(() -> new UserEmailNotFoundException(email));
         return new UserResponseDto(appUser);

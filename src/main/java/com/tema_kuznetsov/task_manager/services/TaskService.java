@@ -102,8 +102,6 @@ public class TaskService {
         if (dto.getPerformerId() != null) {
             task.setPerformer(userRepository.findById(dto.getPerformerId())
                     .orElseThrow(() -> new PerformerIdNotFoundException(dto.getPerformerId())));
-        } else {
-            task.setPerformer(null);
         }
 
         return new TaskResponseDto(task);
