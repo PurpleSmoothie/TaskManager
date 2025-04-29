@@ -36,7 +36,13 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 @ControllerAdvice
 public class GlobalExceptionHandler {
-
+    /**
+     * Обрабатывает исключение ConstraintViolationException.
+     *
+     * @param ex      исключение
+     * @param request HTTP запрос
+     * @return ответ с ошибкой
+     */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponse> handleConstraintViolation(
             ConstraintViolationException ex,

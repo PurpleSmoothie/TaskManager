@@ -7,13 +7,24 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 
+/**
+ * Класс, представляющий детали пользователя, который используется для аутентификации в Spring Security.
+ * Этот класс инкапсулирует информацию о пользователе, такую как ID, логин, пароль и его роли.
+ */
 @Getter
 public class CustomUserDetails implements UserDetails {
+
     private final Long id;
     private final String username;
     private final String password;
     private final Collection<? extends GrantedAuthority> authorities;
 
+    /**
+     * Конструктор для создания экземпляра CustomUserDetails из сущности пользователя.
+     *
+     * @param user Пользовательская сущность, содержащая информацию о пользователе.
+     * @param authorities Коллекция ролей, присвоенных пользователю.
+     */
     public CustomUserDetails(AppUser user, Collection<? extends GrantedAuthority> authorities) {
         this.id = user.getId();
         this.username = user.getEmail();

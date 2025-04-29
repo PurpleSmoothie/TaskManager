@@ -11,10 +11,22 @@ import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * DTO для обновления задачи.
+ * Содержит новый текст, описание, статус, приоритет и ID владельца или исполнителя.
+ */
 @Getter
 @Setter
 public class TaskUpdateDto {
 
+    /**
+     * Новое название задачи.
+     * Может быть null или пустым для частичного обновления.
+     * Должно содержать от минимальной до максимальной длины, если указано.
+     *
+     * @see TaskConstrains#MIN_TITLE_LENGTH
+     * @see TaskConstrains#MAX_TITLE_LENGTH
+     */
     @Schema(description = "Название задачи", example = "Обновить API")
     @UniqueTaskTitle
     @NullableSize(
@@ -25,6 +37,14 @@ public class TaskUpdateDto {
     )
     private String title;
 
+    /**
+     * Новое описание задачи.
+     * Может быть null или пустым для частичного обновления.
+     * Должно содержать от минимальной до максимальной длины, если указано.
+     *
+     * @see TaskConstrains#MIN_DESC_LENGTH
+     * @see TaskConstrains#MAX_DESC_LENGTH
+     */
     @Schema(description = "Описание задачи", example = "Добавить новые эндпоинты для задач")
     @NullableSize(
             min = TaskConstrains.MIN_DESC_LENGTH,
@@ -34,6 +54,11 @@ public class TaskUpdateDto {
     )
     private String description;
 
+    /**
+     * Новый статус задачи.
+     * Может быть null для частичного обновления.
+     * Допустимые значения: OPEN, IN_PROGRESS, COMPLETED, CANCELLED.
+     */
     @Schema(description = "Статус задачи", allowableValues = {"OPEN", "IN_PROGRESS", "COMPLETED", "CANCELLED"},
             example = "IN_PROGRESS")
     @NullableTaskStatus
@@ -43,6 +68,11 @@ public class TaskUpdateDto {
     )
     private String status;
 
+    /**
+     * Новый приоритет задачи.
+     * Может быть null для частичного обновления.
+     * Допустимые значения: LOW, MEDIUM, HIGH, CRITICAL.
+     */
     @Schema(description = "Приоритет задачи", allowableValues = {"LOW", "MEDIUM", "HIGH", "CRITICAL"}, example = "MEDIUM")
     @NullableTaskPriority
     @Pattern(
@@ -51,10 +81,18 @@ public class TaskUpdateDto {
     )
     private String priority;
 
+    /**
+     * Новый ID владельца задачи.
+     * Не может быть отрицательным числом.
+     */
     @Positive(message = "ID должен быть положительным")
     @Schema(description = "ID владельца задачи", example = "1")
     private Long ownerId;
 
+    /**
+     * Новый ID исполнителя задачи.
+     * Может быть null для частичного обновления.
+     */
     @Schema(description = "ID исполнителя задачи", example = "2")
     private Long performerId;
 }

@@ -8,9 +8,12 @@ import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 
+/**
+ * Стандартный формат ответа об ошибке.
+ * Содержит информацию о статусе, ошибке, сообщении, пути и временной метке.
+ */
 @Getter
 @Setter
-
 @Schema(description = "Стандартный формат ответа об ошибке", example = """
 {
   "status": 400,
@@ -30,6 +33,13 @@ public class ErrorResponse {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timestamp;
 
+    /**
+     * Конструктор для создания объекта ответа об ошибке.
+     *
+     * @param status  статус HTTP
+     * @param message сообщение об ошибке
+     * @param path    путь запроса, вызвавшего ошибку
+     */
     public ErrorResponse(HttpStatus status, String message, String path) {
         this.status = status.value();
         this.error = status.getReasonPhrase();

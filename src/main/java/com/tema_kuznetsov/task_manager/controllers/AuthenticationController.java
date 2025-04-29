@@ -27,6 +27,12 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.Map;
 
+/**
+ * Контроллер для аутентификации и регистрации пользователей.
+ * Предоставляет операции для авторизации пользователя (вход в систему),
+ * валидации JWT токена и регистрации нового пользователя.
+ * Все операции защищены авторизацией через JWT и разграничением доступа по ролям.
+ */
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/auth")
@@ -37,7 +43,13 @@ public class AuthenticationController {
     private final CustomUserDetailsService userDetailsService;
     private final JwtService jwtService;
 
-
+    /**
+     * Авторизация пользователя с получением JWT токена.
+     * Проводит аутентификацию пользователя по email и паролю и возвращает JWT токен.
+     *
+     * @param loginRequest запрос с email и паролем пользователя.
+     * @return JWT токен в случае успешной авторизации, ошибка 401 в случае неверного логина или пароля.
+     */
     @Operation(summary = "Авторизация пользователя",
             description = "Позволяет войти в систему и получить JWT токен по email и паролю")
     @ApiResponses({
@@ -70,6 +82,14 @@ public class AuthenticationController {
         }
     }
 
+    /**
+     * Валидация переданного JWT токена.
+     * Проверяет, является ли токен валидным и не истёкшим.
+     *
+     * @param token JWT токен, передаваемый в заголовке авторизации.
+     * @param request HttpServletRequest для получения URI запроса.
+     * @return 200 OK если токен валиден, 401 UNAUTHORIZED если токен невалиден.
+     */
     @GetMapping("/validate")
     @Operation(summary = "Валидация JWT токена", description = "Проверка действительности переданного JWT токена")
     @ApiResponses({
@@ -104,12 +124,18 @@ public class AuthenticationController {
         return ResponseEntity.ok(true);
     }
 
+    /**
+     * Регистрация нового пользователя с ролью USER.
+     * Принимает данные пользователя, создает запись в базе и возвращает созданного пользователя.
+     *
+     * @param dto данные для регистрации пользователя (email, пароль и др.).
+     * @return Ответ с данными созданного пользователя и URI для получения его информации.
+     */
     @PostMapping("/register")
     @Operation(summary = "Регистрация нового пользователя", description = "Создание нового пользователя с ролью USER")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Пользователь успешно зарегистрирован"),
             @ApiResponse(responseCode = "400", description = "Некорректные данные регистрации"),
-
     })
     public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserCreateDto dto) {
         AppUser createdUser = userDetailsService.createUser(dto);

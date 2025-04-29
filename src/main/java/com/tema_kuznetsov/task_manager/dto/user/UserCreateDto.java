@@ -10,10 +10,21 @@ import lombok.Getter;
 import lombok.Setter;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+/**
+ * DTO для создания пользователя.
+ * Содержит информацию о логине, email и пароле пользователя.
+ */
 @Getter
 @Setter
 public class UserCreateDto {
 
+    /**
+     * Логин пользователя.
+     * Должен содержать от минимальной до максимальной длины и быть уникальным.
+     *
+     * @see UserConstrains#MIN_LOGIN_LENGTH
+     * @see UserConstrains#MAX_LOGIN_LENGTH
+     */
     @Schema(description = "Логин пользователя", example = "newuser123", required = true)
     @NotBlank(message = "Логин обязателен")
     @Size(
@@ -25,6 +36,13 @@ public class UserCreateDto {
     @UniqueUserLogin
     private String login;
 
+    /**
+     * Email пользователя.
+     * Должен быть уникальным и иметь корректный формат.
+     *
+     * @see UserConstrains#MIN_EMAIL_LENGTH
+     * @see UserConstrains#MAX_EMAIL_LENGTH
+     */
     @Schema(description = "Email пользователя", example = "newuser@example.com", required = true)
     @Email(message = "Некорректный формат email")
     @NotBlank(message = "Email обязателен")
@@ -37,6 +55,13 @@ public class UserCreateDto {
     @UniqueUserEmail
     private String email;
 
+    /**
+     * Пароль пользователя.
+     * Должен содержать от минимальной до максимальной длины.
+     *
+     * @see UserConstrains#MIN_PASSWORD_LENGTH
+     * @see UserConstrains#MAX_PASSWORD_LENGTH
+     */
     @Schema(description = "Пароль пользователя", example = "strongPass123", required = true)
     @NotBlank(message = "Пароль обязателен")
     @Size(

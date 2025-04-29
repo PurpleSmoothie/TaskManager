@@ -19,6 +19,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Сервис для работы с комментариями.
+ * Предоставляет методы для создания, обновления, удаления и поиска комментариев.
+ */
 @AllArgsConstructor
 @Service
 public class CommentService {
@@ -27,6 +31,13 @@ public class CommentService {
     private final UserRepository userRepository;
     private final TaskRepository taskRepository;
 
+    /**
+     * Создает новый комментарий.
+     * Включает в себя установку автора комментария (из аутентификации пользователя) и привязку к задаче.
+     *
+     * @param dto объект, содержащий информацию о новом комментарии
+     * @return DTO с информацией о созданном комментарии
+     */
     @Transactional
     public CommentResponseDto createComment(CommentCreateDto dto) {
         Comment comment = new Comment();
@@ -47,17 +58,39 @@ public class CommentService {
         return new CommentResponseDto(comment);
     }
 
+    /**
+     * Находит комментарий по его идентификатору.
+     *
+     * @param id идентификатор комментария
+     * @return DTO с информацией о комментарии
+     * @throws CommentIdNotFoundException если комментарий не найден
+     */
     public CommentResponseDto findCommentById(Long id) {
         Comment comment = getCommentByIdOrThrow(id);
         return new CommentResponseDto(comment);
     }
 
+    /**
+     * Удаляет комментарий по его идентификатору.
+     *
+     * @param id идентификатор комментария
+     * @throws CommentIdNotFoundException если комментарий не найден
+     */
     @Transactional
     public void deleteCommentById(Long id) {
         Comment comment = getCommentByIdOrThrow(id);
         commentRepository.delete(comment);
     }
 
+    /**
+     * Обновляет комментарий по его идентификатору.
+     * Обновляются только текстовые данные комментария.
+     *
+     * @param id  идентификатор комментария
+     * @param dto объект с обновленным текстом комментария
+     * @return DTO с информацией об обновленном комментарии
+     * @throws CommentIdNotFoundException если комментарий не найден
+     */
     @Transactional
     public CommentResponseDto updateCommentById(Long id, CommentUpdateDto dto) {
         Comment comment = getCommentByIdOrThrow(id);
@@ -66,16 +99,38 @@ public class CommentService {
         return new CommentResponseDto(comment);
     }
 
+    /**
+     * Получает комментарии для указанной задачи.
+     *
+     * @param taskId  идентификатор задачи
+     * @param pageable объект для пагинации
+     * @return список комментариев в виде страниц
+     */
     public Page<CommentResponseDto> getCommentsForTask(Long taskId, Pageable pageable) {
         return commentRepository.findByTaskIdOrderByCreatedAtDesc(taskId, pageable)
                 .map(CommentResponseDto::new);
     }
 
+    /**
+     * Получает комментарии для указанного пользователя.
+     *
+     * @param userId  идентификатор пользователя
+     * @param pageable объект для пагинации
+     * @return список комментариев в виде страниц
+     */
     public Page<CommentResponseDto> getCommentsForUser(Long userId, Pageable pageable) {
         return commentRepository.findByAuthorIdOrderByCreatedAtDesc(userId, pageable)
                 .map(CommentResponseDto::new);
     }
 
+    /**
+     * Находит комментарий по его идентификатору.
+     * Если комментарий не найден, выбрасывает исключение {@link CommentIdNotFoundException}.
+     *
+     * @param id идентификатор комментария
+     * @return найденный комментарий
+     * @throws CommentIdNotFoundException если комментарий не найден
+     */
     public Comment getCommentByIdOrThrow(Long id) {
         return commentRepository.findById(id)
                 .orElseThrow(() -> new CommentIdNotFoundException(id));

@@ -9,10 +9,20 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * DTO для создания комментария.
+ * Содержит информацию о тексте комментария и привязанной задаче.
+ */
 @Getter
 @Setter
 public class CommentCreateDto {
 
+    /**
+     * Текст комментария.
+     * Должен быть строкой, не пустой и не превышать максимальную длину.
+     *
+     * @see CommentConstrains#MAX_TEXT_LENGTH
+     */
     @Schema(
             description = "Текст комментария",
             example = "Очень полезная задача, спасибо!",
@@ -25,6 +35,10 @@ public class CommentCreateDto {
     )
     private String text;
 
+    /**
+     * ID задачи, к которой прикрепляется комментарий.
+     * Должен быть положительным числом и не может быть null.
+     */
     @Schema(
             description = "ID задачи, к которой прикрепляется комментарий",
             example = "42"

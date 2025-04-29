@@ -9,10 +9,21 @@ import lombok.Getter;
 import lombok.Setter;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+/**
+ * DTO для обновления данных пользователя.
+ * Содержит информацию о новом логине, email и пароле, которые могут быть обновлены частично.
+ */
 @Getter
 @Setter
 public class UserUpdateDto {
 
+    /**
+     * Новый логин пользователя (опционально).
+     * Должен содержать от минимальной до максимальной длины и быть уникальным.
+     *
+     * @see UserConstrains#MIN_LOGIN_LENGTH
+     * @see UserConstrains#MAX_LOGIN_LENGTH
+     */
     @Schema(description = "Новый логин пользователя (опционально)", example = "user123")
     @NullableSize(
             min = UserConstrains.MIN_LOGIN_LENGTH,
@@ -23,6 +34,13 @@ public class UserUpdateDto {
     @UniqueUserLogin
     private String login;
 
+    /**
+     * Новый email пользователя (опционально).
+     * Должен быть уникальным и иметь корректный формат.
+     *
+     * @see UserConstrains#MIN_EMAIL_LENGTH
+     * @see UserConstrains#MAX_EMAIL_LENGTH
+     */
     @Schema(description = "Новый email пользователя (опционально)", example = "user@example.com")
     @NullableEmail
     @NullableSize(
@@ -34,6 +52,13 @@ public class UserUpdateDto {
     @UniqueUserEmail
     private String email;
 
+    /**
+     * Новый пароль пользователя (опционально).
+     * Должен содержать от минимальной до максимальной длины.
+     *
+     * @see UserConstrains#MIN_PASSWORD_LENGTH
+     * @see UserConstrains#MAX_PASSWORD_LENGTH
+     */
     @Schema(description = "Новый пароль пользователя (опционально)", example = "newStrongPassword123")
     @NullableSize(
             min = UserConstrains.MIN_PASSWORD_LENGTH,

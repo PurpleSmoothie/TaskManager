@@ -10,11 +10,22 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * DTO для создания задачи.
+ * Содержит информацию о названии, описании, статусе, приоритете и исполнителе задачи.
+ */
 @Getter
 @Setter
 @ToString
 public class TaskCreateDto {
 
+    /**
+     * Название задачи.
+     * Должно содержать от минимальной до максимальной длины и быть уникальным.
+     *
+     * @see TaskConstrains#MIN_TITLE_LENGTH
+     * @see TaskConstrains#MAX_TITLE_LENGTH
+     */
     @Schema(description = "Название задачи", example = "Разработать API")
     @NotBlank(message = "Название задачи обязательно")
     @Size(
@@ -26,6 +37,13 @@ public class TaskCreateDto {
     @UniqueTaskTitle
     private String title;
 
+    /**
+     * Описание задачи.
+     * Должно содержать от минимальной до максимальной длины.
+     *
+     * @see TaskConstrains#MIN_DESC_LENGTH
+     * @see TaskConstrains#MAX_DESC_LENGTH
+     */
     @Schema(description = "Описание задачи", example = "Разработать REST API для управления задачами")
     @NotBlank(message = "Описание задачи обязательно")
     @Size(
@@ -36,6 +54,10 @@ public class TaskCreateDto {
     )
     private String description;
 
+    /**
+     * Статус задачи.
+     * Допустимые значения: OPEN, IN_PROGRESS, COMPLETED, CANCELLED.
+     */
     @Schema(description = "Статус задачи", allowableValues = {"OPEN", "IN_PROGRESS", "COMPLETED", "CANCELLED"}, example = "OPEN")
     @Pattern(
             regexp = "OPEN|IN_PROGRESS|COMPLETED|CANCELLED",
@@ -43,6 +65,10 @@ public class TaskCreateDto {
     )
     private String status;
 
+    /**
+     * Приоритет задачи.
+     * Допустимые значения: LOW, MEDIUM, HIGH, CRITICAL.
+     */
     @Schema(description = "Приоритет задачи", allowableValues = {"LOW", "MEDIUM", "HIGH", "CRITICAL"}, example = "HIGH")
     @Pattern(
             regexp = "LOW|MEDIUM|HIGH|CRITICAL",
@@ -50,6 +76,10 @@ public class TaskCreateDto {
     )
     private String priority;
 
+    /**
+     * ID исполнителя задачи.
+     * Может быть null, если задача не назначена исполнителю.
+     */
     @Schema(description = "ID исполнителя задачи", example = "1")
     private Long performerId;
 }

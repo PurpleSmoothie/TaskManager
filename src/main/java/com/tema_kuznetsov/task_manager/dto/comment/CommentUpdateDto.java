@@ -7,10 +7,20 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * DTO для обновления комментария.
+ * Содержит новый текст комментария, который заменяет старый.
+ */
 @Getter
 @Setter
 public class CommentUpdateDto {
 
+    /**
+     * Новый текст комментария.
+     * Должен быть строкой, не пустой и не превышать максимальную длину.
+     *
+     * @see CommentConstrains#MAX_TEXT_LENGTH
+     */
     @Schema(
             description = "Обновлённый текст комментария",
             example = "Я передумал, это была не такая уж и полезная задача.",

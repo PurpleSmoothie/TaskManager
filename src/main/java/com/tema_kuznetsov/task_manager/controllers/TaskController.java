@@ -27,6 +27,12 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import static org.springframework.data.domain.Sort.Direction.DESC;
 
+/**
+ * Контроллер для управления задачами.
+ * Предоставляет CRUD-операции для создания, получения, обновления и удаления задач.
+ * Поддерживает поиск задач по различным критериям и управление статусами/приоритетами.
+ * Все операции защищены авторизацией через JWT и разграничением доступа по ролям.
+ */
 @Validated
 @RestController
 @RequestMapping("/api/tasks")
@@ -35,6 +41,13 @@ import static org.springframework.data.domain.Sort.Direction.DESC;
 public class TaskController {
     private final TaskService taskService;
 
+    /**
+     * Создание новой задачи.
+     * Доступно для ролей: ADMIN, USER, MODERATOR.
+     *
+     * @param dto данные для создания задачи
+     * @return созданная задача с HTTP статусом 201
+     */
     @PostMapping("/create")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER', 'MODERATOR')")
     @Operation(
@@ -57,6 +70,13 @@ public class TaskController {
         return ResponseEntity.created(location).body(new TaskResponseDto(createdTask));
     }
 
+    /**
+     * Получение задачи по ID.
+     * Доступно для ролей: ADMIN, USER, MODERATOR.
+     *
+     * @param id идентификатор задачи
+     * @return найденная задача с HTTP статусом 200
+     */
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER', 'MODERATOR')")
     @Operation(
@@ -77,6 +97,13 @@ public class TaskController {
         return ResponseEntity.ok(taskService.findTaskById(id));
     }
 
+    /**
+     * Поиск задачи по точному названию.
+     * Доступно для ролей: ADMIN, USER, MODERATOR.
+     *
+     * @param title точное название задачи
+     * @return найденная задача с HTTP статусом 200
+     */
     @GetMapping("/search/exact")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER', 'MODERATOR')")
     @Operation(
@@ -100,6 +127,14 @@ public class TaskController {
         return ResponseEntity.ok(taskService.findTaskByExactTitle(title));
     }
 
+    /**
+     * Поиск задач по части названия с пагинацией.
+     * Доступно для ролей: ADMIN, USER, MODERATOR.
+     *
+     * @param titlePart часть названия для поиска
+     * @param pageable параметры пагинации и сортировки
+     * @return страница найденных задач с HTTP статусом 200
+     */
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER', 'MODERATOR')")
     @Operation(
@@ -123,6 +158,13 @@ public class TaskController {
         return ResponseEntity.ok(taskService.findTaskByTitleContaining(titlePart, pageable));
     }
 
+    /**
+     * Получение всех задач с пагинацией.
+     * Доступно только для ролей: ADMIN и MODERATOR.
+     *
+     * @param pageable параметры пагинации и сортировки
+     * @return страница всех задач с HTTP статусом 200
+     */
     @GetMapping("/list")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     @Operation(
@@ -141,6 +183,14 @@ public class TaskController {
         return ResponseEntity.ok(taskService.findAllTasks(pageable));
     }
 
+    /**
+     * Обновление задачи.
+     * Доступно владельцу задачи или ADMIN.
+     *
+     * @param id идентификатор задачи
+     * @param updateDto данные для обновления задачи
+     * @return обновленная задача с HTTP статусом 200
+     */
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or @taskOwnerValidator.isTaskOwner(#id, authentication)")
     @Operation(
@@ -163,6 +213,13 @@ public class TaskController {
         return ResponseEntity.ok(taskService.updateTaskById(id, updateDto));
     }
 
+    /**
+     * Удаление задачи по ID.
+     * Доступно владельцу задачи или ADMIN.
+     *
+     * @param id идентификатор задачи для удаления
+     * @return HTTP статус 204 (No Content) при успешном удалении
+     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or @taskOwnerValidator.isTaskOwner(#id, authentication)")
     @Operation(
@@ -185,6 +242,13 @@ public class TaskController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Удаление задачи по названию.
+     * Доступно только для ADMIN.
+     *
+     * @param title название задачи для удаления
+     * @return HTTP статус 204 (No Content) при успешном удалении
+     */
     @DeleteMapping("/by-title/{title}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(
@@ -210,6 +274,14 @@ public class TaskController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Обновление статуса задачи.
+     * Доступно владельцу задачи, исполнителю задачи или ADMIN.
+     *
+     * @param id идентификатор задачи
+     * @param status новый статус задачи
+     * @return обновленная задача с HTTP статусом 200
+     */
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN') or @taskOwnerValidator.isTaskOwner(#id, authentication) " +
             "or @taskOwnerValidator.isTaskPerformer(#id, authentication)")
@@ -236,6 +308,14 @@ public class TaskController {
         return ResponseEntity.ok(taskService.updateTaskStatusById(id, status));
     }
 
+    /**
+     * Обновление приоритета задачи.
+     * Доступно владельцу задачи, исполнителю задачи или ADMIN.
+     *
+     * @param id идентификатор задачи
+     * @param priority новый приоритет задачи
+     * @return обновленная задача с HTTP статусом 200
+     */
     @PatchMapping("/{id}/priority")
     @PreAuthorize("hasRole('ADMIN') or @taskOwnerValidator.isTaskOwner(#id, authentication) " +
             "or @taskOwnerValidator.isTaskPerformer(#id, authentication)")
@@ -261,6 +341,14 @@ public class TaskController {
         return ResponseEntity.ok(taskService.updateTaskPriorityById(id, priority));
     }
 
+    /**
+     * Назначение исполнителя задачи.
+     * Доступно только для ADMIN или владельца задачи.
+     *
+     * @param id идентификатор задачи
+     * @param performerId идентификатор исполнителя
+     * @return обновленная задача с HTTP статусом 200
+     */
     @PatchMapping("/{id}/performer")
     @PreAuthorize("hasRole('ADMIN') or @taskOwnerValidator.isTaskOwner(#id, authentication)")
     @Operation(
@@ -285,6 +373,14 @@ public class TaskController {
         return ResponseEntity.ok(taskService.updateTaskPerformer(id, performerId));
     }
 
+    /**
+     * Поиск задач по статусу с пагинацией.
+     * Доступно для ADMIN и MODERATOR.
+     *
+     * @param status статус для поиска
+     * @param pageable параметры пагинации и сортировки
+     * @return страница найденных задач с HTTP статусом 200
+     */
     @GetMapping("/search/status")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     @Operation(
@@ -308,6 +404,14 @@ public class TaskController {
         return ResponseEntity.ok(taskService.findTasksByStatus(status, pageable));
     }
 
+    /**
+     * Поиск задач по приоритету с пагинацией.
+     * Доступно для ADMIN и MODERATOR.
+     *
+     * @param priority приоритет для поиска
+     * @param pageable параметры пагинации и сортировки
+     * @return страница найденных задач с HTTP статусом 200
+     */
     @GetMapping("/search/priority")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     @Operation(
@@ -331,6 +435,14 @@ public class TaskController {
         return ResponseEntity.ok(taskService.findTasksByPriority(priority, pageable));
     }
 
+    /**
+     * Получение всех комментариев к задаче с пагинацией.
+     * Доступно для ADMIN и MODERATOR.
+     *
+     * @param id идентификатор задачи
+     * @param pageable параметры пагинации и сортировки
+     * @return страница комментариев с HTTP статусом 200
+     */
     @GetMapping("{id}/comments")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     @Operation(

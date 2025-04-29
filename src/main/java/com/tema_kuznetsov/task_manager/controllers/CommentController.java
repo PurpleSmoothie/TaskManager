@@ -18,6 +18,11 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 
+/**
+ * Контроллер для управления комментариями.
+ * Предоставляет CRUD-операции для создания, получения, обновления и удаления комментариев.
+ * Все операции защищены авторизацией через JWT и разграничением доступа по ролям.
+ */
 @RestController
 @RequestMapping("/api/comments")
 @RequiredArgsConstructor
@@ -26,6 +31,13 @@ public class CommentController {
 
     private final CommentService commentService;
 
+    /**
+     * Создание нового комментария.
+     * Доступно для ролей: ADMIN, USER, MODERATOR.
+     *
+     * @param dto данные для создания комментария.
+     * @return созданный комментарий с HTTP статусом 201.
+     */
     @PostMapping("/create")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER', 'MODERATOR')")
     @Operation(summary = "Создать комментарий", description = "Доступно для ролей: ADMIN, USER, MODERATOR")
@@ -44,6 +56,13 @@ public class CommentController {
         return ResponseEntity.created(location).body(createdComment);
     }
 
+    /**
+     * Получение комментария по ID.
+     * Доступно для ролей ADMIN, USER, MODERATOR.
+     *
+     * @param id идентификатор комментария.
+     * @return найденный комментарий с HTTP статусом 200.
+     */
     @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER', 'MODERATOR')")
     @Operation(summary = "Получить комментарий по ID", description = "Доступно для ролей ADMIN, USER, MODERATOR")
@@ -58,6 +77,13 @@ public class CommentController {
         return ResponseEntity.ok(commentService.findCommentById(id));
     }
 
+    /**
+     * Удаление комментария по ID.
+     * Доступно владельцу комментария или ADMIN.
+     *
+     * @param id идентификатор комментария для удаления.
+     * @return HTTP статус 204 (No Content) при успешном удалении.
+     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or @commentOwnerValidator.isCommentOwner(#id, authentication)")
     @Operation(summary = "Удалить комментарий по ID", description = "Доступно владельцу комментария или ADMIN")
@@ -75,6 +101,14 @@ public class CommentController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Обновление комментария по ID.
+     * Доступно владельцу комментария или ADMIN.
+     *
+     * @param id идентификатор комментария.
+     * @param commentUpdateDto данные для обновления комментария.
+     * @return обновленный комментарий с HTTP статусом 200.
+     */
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or @commentOwnerValidator.isCommentOwner(#id, authentication)")
     @Operation(summary = "Обновить комментарий", description = "Доступно владельцу комментария или ADMIN")

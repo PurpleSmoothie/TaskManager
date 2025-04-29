@@ -13,12 +13,25 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+/**
+ * Обработчик ошибок для несанкционированного доступа с отсутствующим или неверным JWT токеном.
+ * Возвращает ошибку 401 с соответствующим сообщением и путем запроса.
+ */
 @RequiredArgsConstructor
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     private final ObjectMapper objectMapper;
 
+    /**
+     * Этот метод вызывается при несанкционированном доступе (например, если JWT токен отсутствует или невалиден).
+     *
+     * @param request HTTP запрос, который привел к ошибке.
+     * @param response HTTP ответ, который будет отправлен клиенту с ошибкой.
+     * @param authException Исключение, вызванное проблемой с аутентификацией.
+     * @throws IOException Если возникает ошибка при записи ответа.
+     * @throws ServletException Если возникает ошибка сервлета.
+     */
     @Override
     public void commence(
             HttpServletRequest request,
